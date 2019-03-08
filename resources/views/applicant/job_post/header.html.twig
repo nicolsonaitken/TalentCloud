@@ -20,14 +20,14 @@
                     class="job-post__header-meta">
                     <span>
                         {% if job.close_date_time.isFuture() %}
-                           {{ job_post.header.apply_by_label|trans }} {{ job.applyBy().date }}, {{ job.applyBy().time }}
+                           {{ job_post.header.apply_by_label|trans }} {{ humanizeLastDay(job.close_date_time) }}
                         {% else %}
                             {{ job_post.header.job_closed }}
                         {% endif %}
                     </span>
                     &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                     <span>
-                        {{ job_post.header.applicants_so_far|trans_choice(job.submitted_applications_count) }}
+                        {{ job_post.header.applicants_so_far|trans_choice(job.submitted_applications_count()) }}
                     </span>
                 </p>
 

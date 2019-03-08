@@ -13,6 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Lang;
 use Jenssegers\Date\Date;
+use \Backpack\CRUD\CrudTrait;
 
 /**
  * Class JobPoster
@@ -23,6 +24,8 @@ use Jenssegers\Date\Date;
  * @property \Jenssegers\Date\Date $open_date_time
  * @property \Jenssegers\Date\Date $close_date_time
  * @property \Jenssegers\Date\Date $start_date_time
+ * @property \Jenssegers\Date\Date $review_requested_at
+ * @property \Jessengers\Date\Date $published_at
  * @property int $department_id
  * @property int $province_id
  * @property int $salary_min
@@ -67,7 +70,7 @@ use Jenssegers\Date\Date;
  */
 class JobPoster extends BaseModel
 {
-
+    use CrudTrait;
     use \Dimsav\Translatable\Translatable;
     use Notifiable;
 
@@ -116,7 +119,9 @@ class JobPoster extends BaseModel
     protected $dates = [
         'open_date_time',
         'close_date_time',
-        'start_date_time'
+        'start_date_time',
+        'review_requested_at',
+        'published_at'
     ];
 
     /**
@@ -139,11 +144,7 @@ class JobPoster extends BaseModel
         'remote_work_allowed',
         'published'
     ];
-
-    /**
-     * @var string[] $withCount
-     */
-    protected $withCount = ['submitted_applications'];
+    // protected $withCount = ['submitted_applications'];
 
     /**
      * @var mixed[] $dispatchesEvents
@@ -216,10 +217,10 @@ class JobPoster extends BaseModel
 
     // Artificial Relations
 
-    public function submitted_applications() // phpcs:ignore
+    public function submitted_applications()
     {
-        return $this->hasMany(\App\Models\JobApplication::class)->whereHas('application_status', function ($query) {
-            $query->where('name', '!=', 'draft');
+        return $this->job_applications()->whereDoesntHave('application_status', function ($query) : void {
+            $query->where('name', 'draft');
         });
     }
 
@@ -227,7 +228,32 @@ class JobPoster extends BaseModel
 
     // Accessors
 
+    // Mutators
+
+    /**
+     * Intercept setting the "published" attribute, and set the
+     * "published_at" timestamp if true.
+     *
+     * @param mixed $value Incoming value for the 'published' attribute.
+     *
+     * @return void
+     */
+    public function setPublishedAttribute($value) : void
+    {
+        if ($value && $this->open_date_time->isPast()) {
+            $this->attributes['published_at'] = new Date();
+        } elseif ($value && $this->open_date_time->isFuture()) {
+            $this->attributes['published_at'] = $this->open_date_time;
+        }
+        $this->attributes['published'] = $value;
+    }
+
     // Methods
+
+    public function submitted_applications_count()
+    {
+        return $this->submitted_applications()->count();
+    }
 
     /**
      * Formatted and localized date and time the Job Poster closes.
@@ -251,6 +277,17 @@ class JobPoster extends BaseModel
     }
 
     /**
+     * Return whether the Job is Open or Closed.
+     * Used by the Admin Portal JobPosterCrudController.
+     *
+     * @return string
+     */
+    public function displayStatus() : string
+    {
+        return $this->isOpen() ? 'Open' : 'Closed';
+    }
+
+    /**
      * Check if a Job Poster is open for applications.
      *
      * @return boolean
@@ -260,6 +297,18 @@ class JobPoster extends BaseModel
         return $this->published
             && $this->open_date_time->isPast()
             && $this->close_date_time->isFuture();
+    }
+
+    /**
+     * Check if a Job Poster is closed for applications.
+     *
+     * @return boolean
+     */
+    public function isClosed() : bool
+    {
+        return $this->published
+            && $this->open_date_time->isPast()
+            && $this->close_date_time->isPast();
     }
 
     /**
@@ -293,5 +342,27 @@ class JobPoster extends BaseModel
         $key = "common/time.$unit";
 
         return Lang::choice($key, $count);
+    }
+
+    /**
+     * Return the current status for the Job Poster.
+     * Possible values are "draft", "submitted", "published" and "closed".
+     *
+     * @return string
+     */
+    public function status() : string
+    {
+        $status = 'draft';
+        if ($this->isOpen()) {
+            $status = 'published';
+        } elseif ($this->isClosed()) {
+            $status = 'closed';
+        } elseif ($this->review_requested_at !== null) {
+            $status = 'submitted';
+        } else {
+            $status = 'draft';
+        }
+
+        return $status;
     }
 }

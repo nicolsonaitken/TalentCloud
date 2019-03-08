@@ -4,6 +4,7 @@ use App\Models\SkillDeclaration;
 use App\Models\Skill;
 use App\Models\Lookup\SkillStatus;
 use App\Models\Lookup\SkillLevel;
+use App\Models\Applicant;
 
 $factory->define(SkillDeclaration::class, function (Faker\Generator $faker) {
     return [
@@ -13,6 +14,6 @@ $factory->define(SkillDeclaration::class, function (Faker\Generator $faker) {
         'applicant_id' => function () {
             return factory(Applicant::class)->create()->id;
         },
-        'description' => $faker->paragraph(),
+        'description' => $faker->paragraphs(3, true),
     ];
 });
