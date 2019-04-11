@@ -63,7 +63,7 @@ before_script:
 script:
   # build application / database containers
   - make docker-start
-  - make gen-certs
+  # make gen-certs
   - travis_retry make fresh-db && make fake-data
   - make set-perms
   # laravel mix
