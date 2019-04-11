@@ -22,8 +22,8 @@ addons:
      - google-chrome
     packages:
      - google-chrome-stable fluxbox
-#  hosts:
-#    - talent.test
+  hosts:
+    - talent.test
 
 before_install:
   # free port 5432
@@ -70,8 +70,8 @@ script:
   - ci_env=`bash <(curl -s https://codecov.io/env)`
   - docker run $ci_env gctcntgc/talentcloud sh
   # browser tests
-  - npm run test
   - npm run test-ci
+  - npm run test
   # unit tests
   - make phpunit
 
