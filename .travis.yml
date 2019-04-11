@@ -70,7 +70,7 @@ script:
   # build application / database containers
   - make docker-start
   - make gen-certs
-  - travis_retry make build-db
+  - travis_retry make fresh-db && make fake-data
   - make set-perms
   # laravel mix
   - npm run dev
