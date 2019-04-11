@@ -8,7 +8,7 @@ dist: trusty
 
 services:
   - docker
-  # xvfb
+  - xvfb
 
 cache:
   directories:
@@ -35,7 +35,7 @@ before_install:
   # latest npm@6 version
   - npm i -g npm@^6
   # setup headless browser for tests
-  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 $
+  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 &
   # start web server port 8000
   - php artisan serve &
 
