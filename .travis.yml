@@ -54,7 +54,7 @@ install:
 before_script:
   # required for Test Cafe
   - "export DISPLAY=:99.0"
-  # "sh -e /etc/init.d/xvfb start"
+  - "sh -e /etc/init.d/xvfb start"
   - sleep 3
   - fluxbox >/dev/null 2>&1 &
   # docker login (for tagging/pushing images to our hub repo)
