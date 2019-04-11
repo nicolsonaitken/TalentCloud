@@ -14,6 +14,9 @@ cache:
     - $HOME/.composer/cache/files
     - $HOME/.npm
 
+env:
+  - NODE_RELEASE=11.x
+
 addons:
   chrome: stable # required for lightcrawler
   firefox: latest # following required for Test Cafe
@@ -26,6 +29,9 @@ addons:
     - talent.test
 
 before_install:
+  # nodejs
+  - sudo rm -rf ~/.nvm - curl -sL "https://deb.nodesource.com/setup_${NODE_RELEASE}" | sudo -E bash -
+  - sudo apt-get install -y nodejs
   # free port 5432
   - sudo service postgresql stop
   # latest composer version
